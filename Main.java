@@ -30,10 +30,9 @@ public class Main {
 	double dist[] = null;    // Armazena distancia da origem ao vertice i
 	int pred[] = null;    // Armazena antecessor de i no caminho mais curto
 	int n, pt, veiculos=0;	
-	
+	final int infinito = 100000000;
 	double uMax = 0, aux = 0;
 	Scanner ler = new Scanner(System.in);
-	
 	public Main(String arquivo){
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(arquivo)));
@@ -111,6 +110,7 @@ public class Main {
                         else if(t == 2)
                         	capacidade[i][j][2] = capacidade[i][j][0] * 2.5;
                     }
+					//fft[i][j]=capacidade[i][j][0];
 					if(capacidade[i][j][0] > uMax){
 						uMax = capacidade[i][j][0]; //encontrando o link de maior capacidade na rede
 					}
@@ -166,7 +166,9 @@ public class Main {
 			System.out.println("");
 		}
 		
+		long tempoInicial = System.currentTimeMillis();
 		aux = ils();
+//		construtivo();
 //		ArrayList<Integer> o1 = new ArrayList<Integer>();
 //		ArrayList<Integer> o2 = new ArrayList<Integer>();
 //		
@@ -194,7 +196,9 @@ public class Main {
 		//showMatriz(d, "\nMatriz link travel time apos realização do metodo construtivo");
 		//showMatriz(t, "\nFluxo nas vias");
 		//showMatriz(toll, "\nPEDAGIOS");
+		System.out.println("\nO metodo executou em: " + (System.currentTimeMillis() - tempoInicial)/1000.0 + " segundos");
 		System.out.printf("\nFunção Objetivo: %.4f -> %d pedágios\n", aux, contaTolls());
+		
 	}
 
 
@@ -307,11 +311,11 @@ public class Main {
 			}
 		}
 		Collections.sort(path);
-		
 		atualizaCapacidade();
-		for (int i = 0; i < path.size(); i++){		
+
+		for (int i = 0; i < path.size(); i++){
 			dijkstra(path.get(i).getOrigem());
-			printCaminho(path.get(i));			
+			printCaminho(path.get(i));		
 			//System.out.println("Rota: "+i+" "+path.get(i).getOrigem()+"-"+path.get(i).getDestino()+" Enviando: "+path.get(i).getDemanda()+path.get(i).getRota());
 		}		
 	}
@@ -379,7 +383,7 @@ public class Main {
 	// Remove cada aresta de cada rota
 	public double buscaLocal2(ArrayList<Rota> sol){
 		ArrayList<Integer> aux = new ArrayList<Integer>();
-		double fo, fo_star, fo_ori;
+		double fo=0.0, fo_star=0.0, fo_ori=0.0;
 		boolean melhoria = true;
 		int maxOri = 0, maxDest = 0;
 		fo_ori = calculaFO();	
@@ -409,13 +413,14 @@ public class Main {
 				}
 				if(fo_star < fo_ori){
 					melhoria = true;
+					System.out.printf("Valor:%.2f  para %.2f\n\n",fo_ori ,fo_star);
 					fo_ori = fo_star;
 					atualizaCapacidade();
 					d[maxOri][maxDest] = 1000000; // bloqueia pior aresta
-					//System.out.println(maxOri+ "---"+maxDest+" caminho antes: "+aux);
+					System.out.println(maxOri+ "---"+maxDest+" caminho antes: "+aux);
 					dijkstra(sol.get(i).getOrigem());
 					printCaminho(sol.get(i));
-					//System.out.println("caminho depois: "+sol.get(i).getRota());
+					System.out.println("caminho depois: "+sol.get(i).getRota());						
 				}
 				else{
 					sol.get(i).setRota(aux);
@@ -541,10 +546,10 @@ public class Main {
 					printCaminho(sol.get(i));
 					fo = calculaFO();
 					if(fo < fo_star){
-						//System.out.println("melhorou. Removeu "+v1+" - "+v2);
-						//System.out.println("velho: " + aux);
-						//System.out.println("Novo: " + sol.get(i).getRota());
-						//System.out.printf("Valor:%.2f  para %.2f\n\n", fo_star,fo);
+//						System.out.println("melhorou. Removeu "+v1+" - "+v2);
+//						System.out.println("velho: " + aux);
+//						System.out.println("Novo: " + sol.get(i).getRota());
+//						System.out.printf("Valor:%.2f  para %.2f\n\n", fo_star,fo);
 						fo_star = fo;
 						j = 0;
 						copiaArray(sol.get(i).getRota(), aux);
@@ -607,21 +612,21 @@ public class Main {
 		
 		construtivo(); //Solucao inicial
 		System.out.printf("\nFO Construtivo: %.4f",calculaFO() );
-		fo = buscaLocal5(path);
+		fo = buscaLocal2(path);
 		System.out.printf("\nPrimeira busca local: %.4f",fo );
 		copiaSolucao(path, path_linha);
-		while(melhoria<1000){
+		while(melhoria<30){
 			melhoria++;
 			fo_linha = perturbacao(path_linha, (int)(path.size()*0.25));
-			//System.out.printf("\nValor da fo_linha pos perturbacao: %.4f", fo_linha);
-			fo_linha = buscaLocal(path_linha);
-			//System.out.printf("\nValor da fo_linha pos busca: %.4f", fo_linha);
+//			System.out.printf("\nValor da fo_linha pos perturbacao: %.4f", fo_linha);
+			fo_linha = buscaLocal2(path_linha);
+			System.out.printf("\nValor da fo_linha pos busca: %.4f", fo_linha);
 			if(fo_linha < fo){
 				copiaSolucao(path_linha, path);
-				System.out.println("\n\nMelhorou!");
-				System.out.printf("Valor da fo anterior: %.4f", fo);
+				//System.out.println("\n\nMelhorou!");
+				//System.out.printf("Valor da fo anterior: %.4f", fo);
 				fo = fo_linha;
-				System.out.printf("\nValor da fo depois: %.4f", fo);
+				//System.out.printf("\nValor da fo depois: %.4f", fo);
 				//melhoria = 0;
 			}
 			else{
@@ -698,18 +703,16 @@ public class Main {
 	public void dijkstra(int origem) {
 		double menorDist = 0;
 		int r = 0;
-		
-		dist[origem] = 0;  //distancia da origem
-		pred[origem] = -1; // Vertice de origem nao tem antecessor
 
 		// Inicializa todos os vertices com maxima distancia ate a origem, e sem antecessor
 		for (int i = 0; i < grafo.getN(); i++) {
-			if (i != origem) {
-				dist[i] = Integer.MAX_VALUE;
-				pred[i] = -1;
-			}
+			dist[i] = infinito;
+			pred[i] = -1;
 			a[i] = true; // Todos os vértices sao colocados na lista de abertos (true)
 		}
+
+		dist[origem] = 0;  //distancia da origem
+		pred[origem] = -1; // Vertice de origem nao tem antecessor
 
 		while (aberto()) {
 			r = maisProximo();    // Vertice aberto mais proximo da origem
