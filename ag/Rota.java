@@ -1,7 +1,7 @@
 //package menorCaminho;
 import java.util.ArrayList;
 
-public class Rota implements Comparable<Rota>, Cloneable {
+public class Rota implements Comparable<Rota> {
 	int origem, destino;
 	ArrayList<Integer> vertices = new ArrayList<Integer>();
 	double demanda;
@@ -42,8 +42,8 @@ public class Rota implements Comparable<Rota>, Cloneable {
        }
        return 0;
     }
-    @Override
-    public Rota clone() throws CloneNotSupportedException {
-        return (Rota) super.clone();
-    }
+//    @Override
+//    public Rota clone() throws CloneNotSupportedException {
+//        return (Rota) super.clone();
+//    }
 }

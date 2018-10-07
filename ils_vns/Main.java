@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.StringTokenizer;
-
+	
 
 public class Main {
 	
@@ -174,8 +174,8 @@ public class Main {
 		//showMatriz(t, "\nFluxo nas vias");
 //		showMatriz(toll, "\nPEDAGIOS");
 		System.out.println("\nO metodo executou em: " + (System.currentTimeMillis() - tempoInicial)/1000.0 + " segundos");
-		System.out.printf("\nFunção Objetivo: %.4f -> %d pedágios\n", aux, contaTolls());
-		System.out.printf("\nFunção Objetivo: %.4f -> %d pedágios\n", calculaFO2(), contaTolls());
+//		System.out.printf("\nFunção Objetivo: %.4f -> %d pedágios\n", aux, contaTolls());
+//		System.out.printf("\nFunção Objetivo: %.4f -> %d pedágios\n", calculaFO2(), contaTolls());
 		
 	}
 
@@ -208,7 +208,7 @@ public class Main {
 				copia[i][j] = original[i][j];
 	}
 	
-	public void copiaArray(ArrayList<Integer> origem, ArrayList<Integer> dest){
+	public static void copiaArray(ArrayList<Integer> origem, ArrayList<Integer> dest){
 		dest.clear();
 		for(int i=0; i<origem.size(); i++)
 			dest.add(origem.get(i));
@@ -583,6 +583,7 @@ public class Main {
 		}		
 	}
 	
+	//Metaheuristica ILS
 	public double ils(){
 		ArrayList<Rota> path_linha = new ArrayList<Rota>();
 		double fo, fo_linha;
@@ -614,6 +615,7 @@ public class Main {
 		return fo;
 	}
 	
+	//Metaheuristica VNS
 	public double vns(){
 		ArrayList<Rota> s_linha = new ArrayList<Rota>();
 		double fo = 0.0, fo_linha = 0.0;
@@ -652,6 +654,7 @@ public class Main {
 			neighbor3(s);
 	}
 	
+	//gera vizinho removendo aresta mais ocupada de uma das rotas
 	public void neighbor1(ArrayList<Rota> s){
 		ArrayList<Integer> aux = new ArrayList<Integer>();
 		double piorAresta = Integer.MIN_VALUE, razao;
@@ -681,6 +684,7 @@ public class Main {
 		//System.out.printf("Valor pos vizinho: %.4f\n", calculaFO());
 	}
 	
+	//gera vizinho removendo qualquer aresta de uma das rotas
 	public void neighbor2(ArrayList<Rota> s){
 		Random random = new Random();
 		int v = 0, ori = 0, dest = 0, posicao = 0;
@@ -699,6 +703,7 @@ public class Main {
 //		System.out.printf("Valor pos vizinho: %.4f\n", calculaFO());
 	}
 	
+	//gera vizinho removendo qualquer aresta do grafo
 	public void neighbor3(ArrayList<Rota> s){
 		Random random = new Random();
 		int posicao = 0, a1=0, a2=0;
@@ -726,8 +731,8 @@ public class Main {
 		}
 	}
 	
-	// Imprime o caminho da origem ate o destino / Preenche a tabela de fluxos 't'/ 
-	//  Salva o trajeto percorrido em caminho
+	/* - Imprime o caminho da origem ate o destino / Preenche a tabela de fluxos 't'/ 
+	   - Salva o trajeto percorrido em caminho */
 	public void printCaminho(Rota caminho){		
 		ArrayList<Integer> aux = new ArrayList<Integer>();
 		Integer antecessor = caminho.getDestino();
