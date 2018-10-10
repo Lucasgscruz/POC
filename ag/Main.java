@@ -545,10 +545,39 @@ public class Main {
 	// Algoritmo Genetico
 	public double ag(){
 		ArrayList<Individuo> populacao = new ArrayList<Individuo>();
+		ArrayList<Rota> best = new ArrayList<Rota>();
 		gerarPop(populacao);
+//		for(int i =0; i < populacao.size(); i++)
+//			System.out.printf("fit:%.4f \n", populacao.get(i).getFitness());
+		best = avaliaPop(populacao);
+		System.out.printf("Melhor: %.4f", calculaFO(this.t) );
+		cruzamento(populacao);
 		return 0;
 	}
 	
+	public void cruzamento(ArrayList<Individuo> populacao){
+		Random rand = new Random();
+		double fracao = 0, sorteado = 0,ponteiro = 0;
+		int pai1, pai2;
+		
+		for(Individuo i: populacao){
+			fracao += i.getFitness();
+			System.out.printf("\nfit: %.4f", i.getFitness());
+		}
+		
+		sorteado = rand.nextFloat();
+		
+		System.out.println("\nsorteado:"+sorteado);
+		for(Individuo i: populacao){
+			ponteiro += i.getFitness()/fracao;
+			if(ponteiro > sorteado){
+				System.out.println("\nponteiro: "+ ponteiro);
+				break;
+			}
+		}		
+	}
+	
+	// Gerar populacao inicial
 	public void gerarPop(ArrayList<Individuo> populacao){
 		int cont = 0;
 		
@@ -565,7 +594,7 @@ public class Main {
 		}
 		Collections.sort(path);
 		
-		for(int j = 0; j<10; j++){
+		for(int j = 0; j<5; j++){ // populacao de 10 individuos
 			limpaMatiz(this.t);
 			gerarPesos();	
 			for (int i = 0; i < path.size(); i++){
@@ -574,21 +603,41 @@ public class Main {
 //				System.out.println("Rota: "+i+" "+path.get(i).getOrigem()+"-"+path.get(i).getDestino()+
 //				" Enviando: "+path.get(i).getDemanda()+path.get(i).getRota());
 			}
-			buscaLocal(path);
 			populacao.add(new Individuo(cont, n));
+			populacao.get(j).setFitness(buscaLocal(path));			
 			copiaSolucao(path, populacao.get(j).getCromossomo(), populacao.get(j).getT());			
 		}
 	}
+		
+	// Retona o melhor individuo da populacao inicial
+	public ArrayList<Rota> avaliaPop(ArrayList<Individuo> populacao){
+		ArrayList<Rota> melhor = new ArrayList<Rota>();
+		double fit = Integer.MAX_VALUE;
+		int id_star = 0;
+		
+		for(int i = 0; i < populacao.size(); i++){
+			if(populacao.get(i).getFitness() < fit){
+				fit = populacao.get(i).getFitness();
+				id_star = i;
+			}				
+		}
+		copiaSolucao(populacao.get(id_star).getCromossomo(), melhor, this.t);
+		return melhor;
+	}
 	
-	public boolean comparaRotas(ArrayList<Integer> nova, ArrayList<Individuo> pop, int idRota){
-		 int cont = 0; //caso queira permitir que hajam rotas repetidas
-		for(int i = 0; i < pop.size(); i++)
-			if(nova.equals(pop.get(i).getCromossomo().get(idRota).getRota())){
-				cont++;
-			}
-		if(cont > 2)
-			return true;
-		return false;
+	// Retona o melhor individuo da populacao apos o cruzamento e mutacao
+	public ArrayList<Rota> avaliaPop(ArrayList<Individuo> populacao, double fit_star){
+		ArrayList<Rota> melhor = new ArrayList<Rota>();
+		int id_star = 0;
+		
+		for(int i = 0; i < populacao.size(); i++){
+			if(populacao.get(i).getFitness() < fit_star){
+				fit_star = populacao.get(i).getFitness();
+				id_star = i;
+			}				
+		}
+		copiaSolucao(populacao.get(id_star).getCromossomo(), melhor, this.t);
+		return melhor;
 	}
 	
 	// Gera pesos aleatorios para a matriz D
