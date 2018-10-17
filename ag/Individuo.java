@@ -6,7 +6,7 @@ public class Individuo {
 	ArrayList<Rota> cromossomo = new ArrayList<Rota>();
 	double fitness = Integer.MAX_VALUE;
 	double t[][] = null;     // Tabela com o fluxo de veiculos em cada aresta
-	int n;
+	int n;   // numero de vertices da rede
 	
 	public Individuo(int tamanhoRepresentacao, int n){
 		this.t = new double[n][n];

@@ -202,6 +202,12 @@ public class Main {
 				matriz[i][j] = 0;
 	}
 	
+	public void printPop(ArrayList<Individuo> populacao,  String legenda){
+		System.out.println("\n\n"+ legenda);
+		for(int i=0; i < populacao.size(); i++)
+			System.out.printf("Individuo %d -> %,.4f\n",i, populacao.get(i).getFitness());
+	}
+	
 	public void copiaMatiz(double copia[][], double original[][]){
 		for (int i = 0; i < n; i++)
 			for (int j = 0; j < n; j++)
@@ -215,7 +221,7 @@ public class Main {
 	}
 	
 	// Retorna em qual nivel de ocupacao uma aresta está
-	public int nivel(int i, int j){
+	public int nivel(int i, int j, double [][] t){
 		if(t[i][j] > capacidade[i][j][2])
 			return -1;
 		if(t[i][j] > capacidade[i][j][1] && t[i][j] <= capacidade[i][j][2])
@@ -240,7 +246,7 @@ public class Main {
 			for (int j = 0; j < n; j++) {
 				if(capacidade[i][j][0] == 0)
 					continue;				
-				patamar = nivel(i, j);
+				patamar = nivel(i, j, t);
 				if(patamar != -1){
 					FO += custo[i][j][patamar]*t[i][j] + tariff[i][j][patamar]*t[i][j];					
 				}
@@ -260,7 +266,7 @@ public class Main {
 			for (int j = 0; j < n; j++) {
 				if(capacidade[i][j][0] == 0)
 					continue;				
-				patamar = nivel(i, j);
+				patamar = nivel(i, j, t);
 				if(patamar != -1){
 					FO += custo[i][j][patamar]*t[i][j] + tariff[i][j][patamar]*t[i][j];					
 				}
@@ -286,12 +292,12 @@ public class Main {
 	}
 	
 	// Remove a aresta mais ocupada de cada rota
-	public double buscaLocal(ArrayList<Rota> sol){
+	public double buscaLocal(ArrayList<Rota> sol, double [][] t){
 		ArrayList<Integer> aux = new ArrayList<Integer>();
 		double piorAresta = Integer.MIN_VALUE, fo, fo_star, razao;
 		boolean melhoria = true;
 		int maxOri = 0, maxDest = 0;
-		fo_star = calculaFO(this.t);	
+		fo_star = calculaFO(t);	
 		//System.out.printf("\nFo na entrada: %.2f\n", fo_star);
 		
 		while(melhoria){
@@ -302,7 +308,7 @@ public class Main {
 				maxDest = sol.get(i).getDestino();
 				piorAresta = Integer.MIN_VALUE;
 				
-				setFluxo(aux, sol.get(i).getDemanda(), this.t, 2);
+				setFluxo(aux, sol.get(i).getDemanda(), t, 2);
 
 				for(int j = 0; j+1 < aux.size(); j++){
 					razao = t[aux.get(j)][aux.get(j+1)]/capacidade[aux.get(j)][aux.get(j+1)][2];
@@ -312,12 +318,12 @@ public class Main {
 						maxDest = aux.get(j+1);
 					}
 				}		
-				atualizaCapacidade();
+				atualizaCapacidade(this.t);
 				d[maxOri][maxDest] = 1000000; // bloqueia pior aresta
 				dijkstra(sol.get(i).getOrigem());
-				printCaminho(sol.get(i));
+				printCaminho(sol.get(i), t);
 				
-				fo = calculaFO(this.t);
+				fo = calculaFO(t);
 				if(fo < fo_star){
 					melhoria = true;
 //					System.out.println(maxOri+ "---"+maxDest+" caminho antes: "+aux);
@@ -325,9 +331,9 @@ public class Main {
 					fo_star = fo;
 				}
 				else{
-					setFluxo(sol.get(i).getRota(), sol.get(i).getDemanda(), this.t, 2);
+					setFluxo(sol.get(i).getRota(), sol.get(i).getDemanda(), t, 2);
 					sol.get(i).setRota(aux);
-					setFluxo(sol.get(i).getRota(), sol.get(i).getDemanda(), this.t, 1);
+					setFluxo(sol.get(i).getRota(), sol.get(i).getDemanda(), t, 1);
 				}				
 			}
 		}
@@ -350,10 +356,10 @@ public class Main {
 				copiaArray(sol.get(i).getRota(), aux);								
 				setFluxo(aux, sol.get(i).getDemanda(), this.t, 2);
 				for(int j = 0; j+1 < aux.size(); j++){
-					atualizaCapacidade();
+					atualizaCapacidade(this.t);
 					d[aux.get(j)][aux.get(j+1)] = 1000000; // bloqueia pior aresta
 					dijkstra(sol.get(i).getOrigem());
-					printCaminho(sol.get(i));
+					printCaminho(sol.get(i), this.t);
 					fo = calculaFO(this.t);
 					if(fo < fo_star){
 						fo_star = fo;
@@ -369,11 +375,11 @@ public class Main {
 					melhoria = true;
 //					System.out.printf("Valor:%.2f  para %.2f\n\n",fo_ori ,fo_star);
 					fo_ori = fo_star;
-					atualizaCapacidade();
+					atualizaCapacidade(this.t);
 					d[maxOri][maxDest] = 1000000; // bloqueia pior aresta
 //					System.out.println(maxOri+ "---"+maxDest+" caminho antes: "+aux);
 					dijkstra(sol.get(i).getOrigem());
-					printCaminho(sol.get(i));
+					printCaminho(sol.get(i), this.t);
 //					System.out.println("caminho depois: "+sol.get(i).getRota());						
 				}
 				else{
@@ -404,10 +410,10 @@ public class Main {
 					for(int k = 0; k < n; k++){
 						if(capacidade[j][k][0] == 0)
 							continue;
-						atualizaCapacidade();
+						atualizaCapacidade(this.t);
 						d[j][k] = 1000000; // bloqueia pior aresta
 						dijkstra(sol.get(i).getOrigem());
-						printCaminho(sol.get(i));
+						printCaminho(sol.get(i), this.t);
 						fo = calculaFO(this.t);
 						if(fo < fo_star){
 							fo_star = fo;
@@ -423,11 +429,11 @@ public class Main {
 				if(fo_star < fo_ori){
 					melhoria = true;
 					fo_ori = fo_star;
-					atualizaCapacidade();
+					atualizaCapacidade(this.t);
 					d[maxOri][maxDest] = 1000000; // bloqueia pior aresta
 				//	System.out.println(maxOri+ "---"+maxDest+" caminho antes: "+aux);
 					dijkstra(sol.get(i).getOrigem());
-					printCaminho(sol.get(i));
+					printCaminho(sol.get(i), this.t);
 				//	System.out.println("caminho depois: "+sol.get(i).getRota());
 				}
 				else{
@@ -453,9 +459,9 @@ public class Main {
 			for(int i = 0; i < sol.size(); i++){	
 				copiaArray(sol.get(i).getRota(), aux);								
 				setFluxo(aux, sol.get(i).getDemanda(), this.t, 2);
-				atualizaCapacidade();
+				atualizaCapacidade(this.t);
 				dijkstra(sol.get(i).getOrigem());
-				printCaminho(sol.get(i));
+				printCaminho(sol.get(i), this.t);
 				fo = calculaFO(this.t);				
 				if(fo < fo_star){
 					melhoria = true;
@@ -489,15 +495,15 @@ public class Main {
 			for(int i = 0; i < sol.size(); i++){
 				copiaArray(sol.get(i).getRota(), aux);
 				setFluxo(aux, sol.get(i).getDemanda(), this.t, 2);
-				atualizaCapacidade();
+				atualizaCapacidade(this.t);
 				for(int j = 0; j < 10; j++){
 					v1 = random.nextInt(n);
 					v2 = random.nextInt(grafo.getVertices().get(v1).getVizinhos().size());
 					v2 = grafo.getVertices().get(v1).getVizinhos().get(v2).getId();
-					atualizaCapacidade();
+					atualizaCapacidade(this.t);
 					d[v1][v2] = 1000000; // bloqueia aresta escolhida
 					dijkstra(sol.get(i).getOrigem());
-					printCaminho(sol.get(i));
+					printCaminho(sol.get(i), this.t);
 					fo = calculaFO(this.t);
 					if(fo < fo_star){
 //						System.out.println("melhorou. Removeu "+v1+" - "+v2);
@@ -542,39 +548,124 @@ public class Main {
 		}		
 	}
 	
+	public void copiaGene(Rota ori, Rota dest, double [][] t){
+		dest.setDemanda(ori.getDemanda());
+		dest.setOrigem(ori.getOrigem());
+		dest.setDestino(ori.getDestino());
+		dest.setRota(ori.getRota());
+		setFluxo(ori.getRota(), ori.getDemanda(), t, 1);
+	}
+	
 	// Algoritmo Genetico
 	public double ag(){
 		ArrayList<Individuo> populacao = new ArrayList<Individuo>();
 		ArrayList<Rota> best = new ArrayList<Rota>();
+		int numGeracoes = 100;
 		gerarPop(populacao);
-//		for(int i =0; i < populacao.size(); i++)
-//			System.out.printf("fit:%.4f \n", populacao.get(i).getFitness());
 		best = avaliaPop(populacao);
-		System.out.printf("Melhor: %.4f", calculaFO(this.t) );
-		cruzamento(populacao);
+		System.out.printf("Melhor: %,.4f\n", calculaFO(this.t) );
+
+		for(int i=0; i < numGeracoes; i++){
+//			printPop(populacao, "Pop inicial:");
+			populacao = cruzamento(populacao);
+//			printPop(populacao, "Pop cruzamento:");
+			
+			mutacao(populacao);
+			
+//			printPop(populacao, "Pop mutacao");
+			best = avaliaPop(populacao, calculaFO(this.t));
+//			System.out.printf("Melhor: %,f\n",calculaFO(this.t));
+		}
 		return 0;
 	}
 	
-	public void cruzamento(ArrayList<Individuo> populacao){
-		Random rand = new Random();
-		double fracao = 0, sorteado = 0,ponteiro = 0;
-		int pai1, pai2;
+	public void vizinhoQualquer(Individuo ind){
+		Random random = new Random();
+		int posicao = 0, a1=0, a2=0;
 		
-		for(Individuo i: populacao){
-			fracao += i.getFitness();
-			System.out.printf("\nfit: %.4f", i.getFitness());
+		// modifica a rota de 10% dos genes
+		for(int i=0; i < ind.getCromossomo().size()*0.1; i++){
+			posicao = random.nextInt(ind.getCromossomo().size());
+			setFluxo(ind.getCromossomo().get(posicao).getRota(), 
+					 ind.getCromossomo().get(posicao).getDemanda(),
+					 ind.getT(), 2);
+			a1 = random.nextInt(n);
+			a2 = random.nextInt(grafo.getVertices().get(a1).getVizinhos().size());
+			a2 = grafo.getVertices().get(a1).getVizinhos().get(a2).getId();	
+			atualizaCapacidade(ind.getT());
+			d[a1][a2] = 1;
+			dijkstra(ind.getCromossomo().get(posicao).getOrigem());
+			printCaminho(ind.getCromossomo().get(posicao), ind.getT());
 		}
-		
-		sorteado = rand.nextFloat();
-		
-		System.out.println("\nsorteado:"+sorteado);
-		for(Individuo i: populacao){
-			ponteiro += i.getFitness()/fracao;
-			if(ponteiro > sorteado){
-				System.out.println("\nponteiro: "+ ponteiro);
-				break;
+		ind.setFitness(calculaFO(ind.getT()));
+	}
+	
+	// Realiza mutaçao nos individuos da populaçao
+	public void mutacao(ArrayList<Individuo> populacao){
+		Random rand = new Random();
+		for(int i=0; i<populacao.size(); i++){
+			if(rand.nextFloat() <= 0.20){
+//				System.out.println("Mudou o individuo: "+i);
+				vizinhoQualquer(populacao.get(i));
 			}
-		}		
+		}
+	}
+	
+	public ArrayList<Individuo> cruzamento(ArrayList<Individuo> populacao){
+		ArrayList<Individuo> novaPopulacao = new ArrayList<Individuo>();
+		Random rand = new Random();
+		double fracao=0.0, sorteado=0.0, ponteiro = 0.0, gene = 0.0;
+		int pai1=0, pai2=0;
+		
+		for(Individuo i: populacao){
+			fracao += 1000000000 - i.getFitness();
+		}					
+		
+		for(int i=0; i<populacao.size(); i++){
+			for(int p = 0; p<2; p++){
+				sorteado = Math.random();
+				ponteiro = 0;
+				for(int j = 0; j < populacao.size(); j++){
+					ponteiro += (1000000000 - populacao.get(j).getFitness())/fracao;
+					if(ponteiro > sorteado && p == 0){
+//						System.out.printf("\n pai 1: %d  ponteiro: %,f",j, ponteiro);
+						pai1 = j;
+						break;
+					}
+					else if(ponteiro > sorteado && p == 1){
+//						System.out.printf("\n pai 2: %d  ponteiro: %,f",j, ponteiro);
+						pai2 = j;
+						break;
+					}
+				}
+			}
+			gene = 0.0;
+			gene = 2*1000000000 - 
+				   (populacao.get(pai1).getFitness() + populacao.get(pai2).getFitness());
+			
+//			System.out.printf("\nGene 1: %,4f fit: %,f",(1000000000 - populacao.get(pai1).getFitness())/gene, 1000000000-populacao.get(pai1).getFitness());
+//			System.out.printf("\nGene 2: %,4f fit: %,f",(1000000000 - populacao.get(pai2).getFitness())/gene, 1000000000-populacao.get(pai2).getFitness());
+			novaPopulacao.add(new Individuo(populacao.get(pai1).getCromossomo().size(), n));
+			for(int j=0; j<populacao.get(pai1).getCromossomo().size(); j++){
+//				if(rand.nextFloat() < (1000000000 - populacao.get(pai1).getFitness())/gene ){
+				if(Math.random() <= 0.5){
+					copiaGene(populacao.get(pai1).getCromossomo().get(j),
+							   novaPopulacao.get(i).getCromossomo().get(j),
+							   novaPopulacao.get(i).getT());
+				}
+				else{
+					copiaGene(populacao.get(pai2).getCromossomo().get(j),
+							   novaPopulacao.get(i).getCromossomo().get(j),
+							   novaPopulacao.get(i).getT());
+				}				
+			}
+
+			//Busca local sob o novo individuo gerado
+//			buscaLocal(novaPopulacao.get(i).getCromossomo(), novaPopulacao.get(i).getT());
+			
+			novaPopulacao.get(i).setFitness(calculaFO(novaPopulacao.get(i).getT()));
+		}
+		return novaPopulacao;
 	}
 	
 	// Gerar populacao inicial
@@ -594,17 +685,17 @@ public class Main {
 		}
 		Collections.sort(path);
 		
-		for(int j = 0; j<5; j++){ // populacao de 10 individuos
+		for(int j = 0; j<100; j++){ // populacao de 10 individuos
 			limpaMatiz(this.t);
 			gerarPesos();	
 			for (int i = 0; i < path.size(); i++){
 				dijkstra(path.get(i).getOrigem());
-				printCaminho(path.get(i));
+				printCaminho(path.get(i), this.t);
 //				System.out.println("Rota: "+i+" "+path.get(i).getOrigem()+"-"+path.get(i).getDestino()+
 //				" Enviando: "+path.get(i).getDemanda()+path.get(i).getRota());
 			}
 			populacao.add(new Individuo(cont, n));
-			populacao.get(j).setFitness(buscaLocal(path));			
+			populacao.get(j).setFitness(buscaLocal(path, this.t));			
 			copiaSolucao(path, populacao.get(j).getCromossomo(), populacao.get(j).getT());			
 		}
 	}
@@ -629,14 +720,21 @@ public class Main {
 	public ArrayList<Rota> avaliaPop(ArrayList<Individuo> populacao, double fit_star){
 		ArrayList<Rota> melhor = new ArrayList<Rota>();
 		int id_star = 0;
+		boolean melhoria = false;
+//		System.out.printf("Fit star entrada: %,.4f\n\n",fit_star);
 		
 		for(int i = 0; i < populacao.size(); i++){
 			if(populacao.get(i).getFitness() < fit_star){
+				System.out.print("Melhorou: ");
+				System.out.printf("%,.4f -> ",fit_star);
 				fit_star = populacao.get(i).getFitness();
+				System.out.printf("%,.4f\n",fit_star);
 				id_star = i;
+				melhoria = true;
 			}				
 		}
-		copiaSolucao(populacao.get(id_star).getCromossomo(), melhor, this.t);
+		if(melhoria)
+			copiaSolucao(populacao.get(id_star).getCromossomo(), melhor, this.t);
 		return melhor;
 	}
 	
@@ -652,7 +750,7 @@ public class Main {
 	}
 	
 	// Atualiza os valores de capacidade disponivel em cada aresta da matriz d	
-	public void atualizaCapacidade(){		
+	public void atualizaCapacidade(double [][] t){		
 		for (int i = 0; i < n; i++){
 			for (int j = 0; j < n; j++){
 				if(capacidade[i][j][0] == 0) // Pular arestas inexistentes				
@@ -664,7 +762,7 @@ public class Main {
 	
 	// Imprime o caminho da origem ate o destino / Preenche a tabela de fluxos 't'/ 
 	//  Salva o trajeto percorrido em caminho
-	public void printCaminho(Rota caminho){		
+	public void printCaminho(Rota caminho, double [][] t){		
 		ArrayList<Integer> aux = new ArrayList<Integer>();
 		Integer antecessor = caminho.getDestino();
 		aux.add(antecessor);		
