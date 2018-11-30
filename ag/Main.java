@@ -174,7 +174,7 @@ public class Main {
 		//showMatriz(t, "\nFluxo nas vias");
 //		showMatriz(toll, "\nPEDAGIOS");
 		System.out.println("\nO metodo executou em: " + (System.currentTimeMillis() - tempoInicial)/1000.0 + " segundos");
-//		System.out.printf("\nFunção Objetivo: %.4f -> %d pedágios\n", aux, contaTolls());
+		System.out.printf("\nFunção Objetivo: %.4f -> %d pedágios\n", aux, contaTolls());
 //		System.out.printf("\nFunção Objetivo: %.4f -> %d pedágios\n", calculaFO2(), contaTolls());
 		
 	}
@@ -576,7 +576,7 @@ public class Main {
 			best = avaliaPop(populacao, calculaFO(this.t));
 //			System.out.printf("Melhor: %,f\n",calculaFO(this.t));
 		}
-		return 0;
+		return calculaFO(this.t);
 	}
 	
 	public void vizinhoQualquer(Individuo ind){
@@ -685,7 +685,7 @@ public class Main {
 		}
 		Collections.sort(path);
 		
-		for(int j = 0; j<100; j++){ // populacao de 10 individuos
+		for(int j = 0; j<50; j++){ // populacao de 10 individuos
 			limpaMatiz(this.t);
 			gerarPesos();	
 			for (int i = 0; i < path.size(); i++){

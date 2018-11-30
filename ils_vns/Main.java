@@ -10,14 +10,14 @@ import java.util.Collections;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.StringTokenizer;
-	
+
 
 public class Main {
-	
+
 	Grafo grafo = null;
 	ArrayList<Rota> path = new ArrayList<Rota>(); // Array com as rotas entre todos pares OD
 	ArrayList<Vertice> f = new ArrayList<Vertice>(); // Vertices fexados
-	
+
 	double fft[][] = null;     // tempo de viagem com pista livre
 	double d[][] = null;      // Matriz de custo(link travel time) para as arestas (i,j)
 	double custo[][][] = null;      // Matriz de peso(link travel time) para as arestas (i,j)
@@ -25,34 +25,34 @@ public class Main {
 	double capacidade[][][] = null; // Armazena o fluxo maximo suportado em cada link
 	double tariff[][][] = null; // tabela de Pedagios
 	double t[][] = null;     // Tabela com o fluxo de veiculos em cada aresta
-	double toll[][] = null;  // Pedagios	
+	double toll[][] = null;  // Pedagios
 	boolean a[] = null;        // Vertices abertos
 	double dist[] = null;    // Armazena distancia da origem ao vertice i
 	int pred[] = null;    // Armazena antecessor de i no caminho mais curto
-	int n, pt, veiculos=0;	
+	int n, pt, veiculos=0;
 	final int infinito = 100000000;
 	double uMax = 0, aux = 0;
 	Scanner ler = new Scanner(System.in);
 	public Main(String arquivo){
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(arquivo)));
-	
+
 			String line;
 			StringTokenizer aux;
-			
+
             System.out.println(reader.readLine() + " "); // # Numero de nós #
             line = reader.readLine();
             System.out.println(line);
             aux = new StringTokenizer(line, " ");
             this.n = Integer.parseInt(aux.nextToken());
-            
+
             System.out.println(reader.readLine() + " "); // # Numero de Patamares #
-            line = reader.readLine(); 
+            line = reader.readLine();
             System.out.println(line);
             aux = new StringTokenizer(line, " ");
             pt = Integer.parseInt(aux.nextToken()) + 1;
-            
-                      
+
+
             this.fft = new double[n][n]; // Tabela de free flow time
             this.d = new double[n][n]; // Matriz de peso(link travel time) para as arestas (i,j)
             this.custo = new double[n][n][pt];   // Matriz de peso(link travel time) para as arestas (i,j)
@@ -60,11 +60,11 @@ public class Main {
             this.capacidade = new double[n][n][n]; // Armazena o fluxo maximo suportado em cada link
             this.tariff = new double[n][n][pt]; // tabela de Pedagios
             this.t = new double[n][n]; 	  // Tabela com o fluxo de veiculos em cada aresta
-            this.toll = new double[n][n]; // tabela de Pedagios            
-            this.a = new boolean[n];       // Vertices abertos		
+            this.toll = new double[n][n]; // tabela de Pedagios
+            this.a = new boolean[n];       // Vertices abertos
         	this.dist = new double[n];    // Armazena distancia da origem ao vertice i
         	this.pred = new int[n];    // Armazena antecessor de i no caminho mais curto
-        	        	
+
             System.out.println(reader.readLine()); // # Custo #
             for (int nivel = 0; nivel < pt; nivel++) {
                 for (int i = 0; i < n; i++) {
@@ -73,37 +73,38 @@ public class Main {
                     aux = new StringTokenizer(line, " ");
                     for (int j = 0; j < n; j++) {
                         custo[i][j][nivel] = Double.parseDouble(aux.nextToken());
+//                        System.out.println("oi: " + custo[i][j][nivel]);
                     }
                 }
             }
-            
+       
             System.out.println(reader.readLine()); // # t #
             for(int nivel = 0; nivel < pt; nivel++){
-                for(int i = 0; i < n; i++){                
+                for(int i = 0; i < n; i++){
                     // next line
-                    line = reader.readLine(); 
-                    aux = new StringTokenizer(line, " ");            
+                    line = reader.readLine();
+                    aux = new StringTokenizer(line, " ");
                     for(int j = 0; j < n; j++){
                         tariff[i][j][nivel] = Double.parseDouble(aux.nextToken());
                     }
                 }
             }
-        	
+
             reader.readLine(); // # Limite de pedágios #
-            line = reader.readLine(); 
+            line = reader.readLine();
             aux = new StringTokenizer(line, " ");
             int k = Integer.parseInt(aux.nextToken());
-            
+
             grafo = new Grafo(n,pt,k);
-            
+
             reader.readLine(); // # u #   capacidade
             for(int i = 0; i < n; i++){
                 // next line
-                line = reader.readLine(); 
+                line = reader.readLine();
                 aux = new StringTokenizer(line, " ");
                 for(int j = 0; j < n; j++){
 	                for(int t = 0; t < pt; t++){
-                        if (t == 0) 
+                        if (t == 0)
                         	capacidade[i][j][0] = Double.parseDouble(aux.nextToken());
                         else if(t == 1)
                         	capacidade[i][j][1] = capacidade[i][j][0] * 2;
@@ -117,12 +118,12 @@ public class Main {
 					toll[i][j] = 1;
                 }
             }
-            
+
             reader.readLine(); // # Demanda #
-            for(int i = 0; i < n; i++){                
+            for(int i = 0; i < n; i++){
                 // next line
-                line = reader.readLine(); 
-                aux = new StringTokenizer(line, " ");            
+                line = reader.readLine();
+                aux = new StringTokenizer(line, " ");
                 for(int j = 0; j < n; j++){
                     double d = Double.parseDouble(aux.nextToken());
                     demanda[i][j] = d;
@@ -130,31 +131,31 @@ public class Main {
                 }
             }
             reader.close();
-		}	 
+		}
 		catch (IOException e) {
 			System.out.println("Erro na leitura do arquivo! " + e.getMessage());
 		}
-		
+
 		// Cria o grafo com base na matriz capacidade (matriz de adjacencia)
         for(int i = 0; i < n; i++){
             grafo.addVertice(new Vertice(i));
         }
-		
+
         int cont = 0;
         for (int i = 0; i < n; i++) {
 			for (int j = 0; j < n; j++) {
 				if(capacidade[i][j][0] > 0){
 					Aresta arco = new Aresta(cont, i, j, pt);
-					Vertice no = new Vertice(j);					
+					Vertice no = new Vertice(j);
 					grafo.addAresta(arco);
 					grafo.getVertices().get(i).addNeighbor(no);
-                    
+
                     //cont aresta
 					cont++;
-				}			
+				}
 			}
-		}        
-       
+		}
+
 		// Exibir Grafo
 		System.out.println("Rede:");
 		for (int i = 0; i < n; i++) {
@@ -165,18 +166,18 @@ public class Main {
 			}
 			System.out.println("");
 		}
-		
+
 		long tempoInicial = System.currentTimeMillis();
-		aux = vns();
-		
+		aux = ils();
+
 		// Exibir matriz de link travel time e pedagios após a realização do metodo construtivo
 		//showMatriz(d, "\nMatriz link travel time apos realização do metodo construtivo");
 		//showMatriz(t, "\nFluxo nas vias");
 //		showMatriz(toll, "\nPEDAGIOS");
 		System.out.println("\nO metodo executou em: " + (System.currentTimeMillis() - tempoInicial)/1000.0 + " segundos");
-//		System.out.printf("\nFunção Objetivo: %.4f -> %d pedágios\n", aux, contaTolls());
-//		System.out.printf("\nFunção Objetivo: %.4f -> %d pedágios\n", calculaFO2(), contaTolls());
-		
+		System.out.printf("\nFunção Objetivo: %,.4f -> %d pedágios\n", aux, contaTolls());
+		System.out.printf("\nFunção Objetivo: %,.4f -> %d pedágios\n", calculaFO2(), contaTolls());
+
 	}
 
 
@@ -195,25 +196,25 @@ public class Main {
 		}
 		System.out.println("");
 	}
-	
+
 	public void limpaMatiz(double matriz[][]){
 		for (int i = 0; i < n; i++)
 			for (int j = 0; j < n; j++)
 				matriz[i][j] = 0;
 	}
-	
+
 	public void copiaMatiz(double copia[][], double original[][]){
 		for (int i = 0; i < n; i++)
 			for (int j = 0; j < n; j++)
 				copia[i][j] = original[i][j];
 	}
-	
+
 	public static void copiaArray(ArrayList<Integer> origem, ArrayList<Integer> dest){
 		dest.clear();
 		for(int i=0; i<origem.size(); i++)
 			dest.add(origem.get(i));
 	}
-	
+
 	// Retorna em qual nivel de ocupacao uma aresta está
 	public int nivel(int i, int j){
 		if(t[i][j] > capacidade[i][j][2])
@@ -222,63 +223,65 @@ public class Main {
 			return 2;
 		if(t[i][j] > capacidade[i][j][0] && t[i][j] <= capacidade[i][j][1])
 			return 1;
-		return 0;	
+		return 0;
 	}
-	
+
 	public int contaTolls(){
 		int numTolls = 0;
-		for (int i = 0; i < n; i++) 
+		for (int i = 0; i < n; i++)
 			for (int j = 0; j < n; j++)
 				if(t[i][j] > capacidade[i][j][0]) numTolls++;
 		return numTolls;
-	} 
-	
+	}
+
 	public double calculaFO(){
 		int M = 10000, patamar;
-		double FO = 0;		
+		double FO = 0;
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < n; j++) {
 				if(capacidade[i][j][0] == 0)
-					continue;				
+					continue;
 				patamar = nivel(i, j);
 				if(patamar != -1){
-					FO += custo[i][j][patamar]*t[i][j] + tariff[i][j][patamar]*t[i][j];					
+					FO += custo[i][j][patamar]*t[i][j] + tariff[i][j][patamar]*t[i][j];
 				}
 				else{
 //					System.out.println("i: "+i+" j: "+j+ "  t->"+t[i][j]+"  capacidade nivel 2 ->"+ capacidade[i][j][2]
 //					+ " pedagio: " + tariff[i][j][2]);
 					FO += custo[i][j][2] * t[i][j] + tariff[i][j][2]*t[i][j] + M*(t[i][j] - capacidade[i][j][2]);
-				}				
+				}
 			}
 		}
 		return FO;
 	}
 	public double calculaFO2(){
 		int M = 10000, patamar;
-		double FO = 0;		
+		double FO = 0;
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < n; j++) {
 				if(capacidade[i][j][0] == 0)
-					continue;				
+					continue;
 				patamar = nivel(i, j);
 				if(patamar != -1){
-					FO += custo[i][j][patamar]*t[i][j] + tariff[i][j][patamar]*t[i][j];					
+					FO += custo[i][j][patamar]*t[i][j] + tariff[i][j][patamar]*t[i][j];
 				}
 				else{
 					System.out.println("i: "+i+" j: "+j+ "  t->"+t[i][j]+"  capacidade nivel 2 ->"+ capacidade[i][j][2]
 					+ " pedagio: " + tariff[i][j][2]);
 					FO += custo[i][j][2] * t[i][j] + tariff[i][j][2]*t[i][j] + M*(t[i][j] - capacidade[i][j][2]);
-				}				
+				}
 			}
 		}
 		return FO;
 	}
-	
+
 	public void construtivo(){
 		int cont = 0;
+		int oi = 0;
 		for (int i = 0; i < n; i++){
 			for (int j = 0; j < n; j++){
 				if(demanda[i][j] == 0) continue;
+				oi += demanda[i][j];
 				path.add(new Rota());
 				path.get(cont).setDemanda(demanda[i][j]);
 				path.get(cont).setOrigem(i);
@@ -288,34 +291,35 @@ public class Main {
 		}
 		Collections.sort(path);
 		atualizaCapacidade();
-
+		System.out.println("Demanda total: " + oi);
 		for (int i = 0; i < path.size(); i++){
 			dijkstra(path.get(i).getOrigem());
-			printCaminho(path.get(i));		
+			printCaminho(path.get(i));
+			atualizaCapacidade();
 			//System.out.println("Rota: "+i+" "+path.get(i).getOrigem()+"-"+path.get(i).getDestino()+" Enviando: "+path.get(i).getDemanda()+path.get(i).getRota());
-		}		
+		}
 	}
-	
+
 	public void setFluxo(ArrayList<Integer> caminho, double demanda, int opcao){
 		if(opcao == 1){
 			for(int i = 0; i+1 < caminho.size(); i++)
-				t[caminho.get(i)][caminho.get(i+1)] += demanda; //coloca fluxo na rota	
+				t[caminho.get(i)][caminho.get(i+1)] += demanda; //coloca fluxo na rota
 		}
-		else if(opcao == 2){		
+		else if(opcao == 2){
 			for(int i = 0; i+1 < caminho.size(); i++)
-				t[caminho.get(i)][caminho.get(i+1)] -= demanda; //retira fluxo da rota		
+				t[caminho.get(i)][caminho.get(i+1)] -= demanda; //retira fluxo da rota
 		}
 	}
-	
+
 	// Remove a aresta mais ocupada de cada rota
 	public double buscaLocal(ArrayList<Rota> sol){
 		ArrayList<Integer> aux = new ArrayList<Integer>();
 		double piorAresta = Integer.MIN_VALUE, fo, fo_star, razao;
 		boolean melhoria = true;
 		int maxOri = 0, maxDest = 0;
-		fo_star = calculaFO();	
+		fo_star = calculaFO();
 		//System.out.printf("\nFo na entrada: %.2f\n", fo_star);
-		
+
 		while(melhoria){
 			melhoria = false;
 			for(int i = 0; i < sol.size(); i++){
@@ -323,7 +327,7 @@ public class Main {
 				maxOri = sol.get(i).getOrigem();
 				maxDest = sol.get(i).getDestino();
 				piorAresta = Integer.MIN_VALUE;
-				
+
 				setFluxo(aux, sol.get(i).getDemanda(), 2);
 
 				for(int j = 0; j+1 < aux.size(); j++){
@@ -333,12 +337,12 @@ public class Main {
 						maxOri = aux.get(j);
 						maxDest = aux.get(j+1);
 					}
-				}		
+				}
 				atualizaCapacidade();
 				d[maxOri][maxDest] = 1000000; // bloqueia pior aresta
 				dijkstra(sol.get(i).getOrigem());
 				printCaminho(sol.get(i));
-				
+
 				fo = calculaFO();
 				if(fo < fo_star){
 					melhoria = true;
@@ -350,26 +354,26 @@ public class Main {
 					setFluxo(sol.get(i).getRota(), sol.get(i).getDemanda(), 2);
 					sol.get(i).setRota(aux);
 					setFluxo(sol.get(i).getRota(), sol.get(i).getDemanda(), 1);
-				}				
+				}
 			}
 		}
 		return fo_star;
 	}
-	
+
 	// Remove cada aresta de cada rota
 	public double buscaLocal2(ArrayList<Rota> sol){
 		ArrayList<Integer> aux = new ArrayList<Integer>();
 		double fo=0.0, fo_star=0.0, fo_ori=0.0;
 		boolean melhoria = true;
 		int maxOri = 0, maxDest = 0;
-		fo_ori = calculaFO();	
+		fo_ori = calculaFO();
 		fo_star = fo_ori;
 		//System.out.printf("\nFo na entrada: %.2f\n", fo_ori);
-		
+
 		while(melhoria){
 			melhoria = false;
-			for(int i = 0; i < sol.size(); i++){	
-				copiaArray(sol.get(i).getRota(), aux);								
+			for(int i = 0; i < sol.size(); i++){
+				copiaArray(sol.get(i).getRota(), aux);
 				setFluxo(aux, sol.get(i).getDemanda(), 2);
 				for(int j = 0; j+1 < aux.size(); j++){
 					atualizaCapacidade();
@@ -396,31 +400,31 @@ public class Main {
 //					System.out.println(maxOri+ "---"+maxDest+" caminho antes: "+aux);
 					dijkstra(sol.get(i).getOrigem());
 					printCaminho(sol.get(i));
-//					System.out.println("caminho depois: "+sol.get(i).getRota());						
+//					System.out.println("caminho depois: "+sol.get(i).getRota());
 				}
 				else{
 					sol.get(i).setRota(aux);
-					setFluxo(sol.get(i).getRota(), sol.get(i).getDemanda(), 1);	
-				}				
+					setFluxo(sol.get(i).getRota(), sol.get(i).getDemanda(), 1);
+				}
 			}
 		}
 		return fo_ori;
 	}
-	
+
 	//Remove todas as arestas para cada rota
 	public double buscaLocal3(ArrayList<Rota> sol){
 		ArrayList<Integer> aux = new ArrayList<Integer>();
 		double fo, fo_star, fo_ori;
 		boolean melhoria = true;
 		int maxOri = 0, maxDest = 0;
-		fo_ori = calculaFO();	
+		fo_ori = calculaFO();
 		fo_star = fo_ori;
 	//	System.out.printf("\nFo na entrada: %.2f\n", fo_ori);
-		
+
 		while(melhoria){
 			melhoria = false;
 			for(int i = 0; i < sol.size(); i++){
-				copiaArray(sol.get(i).getRota(), aux);								
+				copiaArray(sol.get(i).getRota(), aux);
 				setFluxo(aux, sol.get(i).getDemanda(), 2);
 				for(int j = 0; j < n; j++){
 					for(int k = 0; k < n; k++){
@@ -440,7 +444,7 @@ public class Main {
 						else{
 							setFluxo(sol.get(i).getRota(), sol.get(i).getDemanda(), 2);
 						}
-					}				
+					}
 				}
 				if(fo_star < fo_ori){
 					melhoria = true;
@@ -454,31 +458,31 @@ public class Main {
 				}
 				else{
 					sol.get(i).setRota(aux);
-					setFluxo(sol.get(i).getRota(), sol.get(i).getDemanda(), 1);	
-				}				
+					setFluxo(sol.get(i).getRota(), sol.get(i).getDemanda(), 1);
+				}
 			}
 		}
 		return fo_ori;
 	}
-	
-	// Refaz o dijikstra para todas as rotas 
+
+	// Refaz o dijikstra para todas as rotas
 	public double buscaLocal4(ArrayList<Rota> sol){
 		ArrayList<Integer> aux = new ArrayList<Integer>();
 		double fo, fo_star;
 		boolean melhoria = true;
 		int maxOri = 0, maxDest = 0;
-		fo_star = calculaFO();	
+		fo_star = calculaFO();
 	//	System.out.printf("\nFo na entrada: %.2f\n", fo_star);
-		
+
 		while(melhoria){
 			melhoria = false;
-			for(int i = 0; i < sol.size(); i++){	
-				copiaArray(sol.get(i).getRota(), aux);								
+			for(int i = 0; i < sol.size(); i++){
+				copiaArray(sol.get(i).getRota(), aux);
 				setFluxo(aux, sol.get(i).getDemanda(), 2);
 				atualizaCapacidade();
 				dijkstra(sol.get(i).getOrigem());
 				printCaminho(sol.get(i));
-				fo = calculaFO();				
+				fo = calculaFO();
 				if(fo < fo_star){
 					melhoria = true;
 					fo_star = fo;
@@ -489,12 +493,12 @@ public class Main {
 					setFluxo(sol.get(i).getRota(), sol.get(i).getDemanda(), 2);
 					sol.get(i).setRota(aux);
 					setFluxo(sol.get(i).getRota(), sol.get(i).getDemanda(), 1);
-				}					
+				}
 			}
 		}
 		return fo_star;
 	}
-	
+
 	// Remove arestas aleatórias
 	public double buscaLocal5(ArrayList<Rota> sol){
 		ArrayList<Integer> aux = new ArrayList<Integer>();
@@ -502,10 +506,10 @@ public class Main {
 		boolean melhoria = true;
 		int v1, v2;
 		Random random = new Random();
-		fo_ori = calculaFO();	
-		fo_star = fo_ori;	
+		fo_ori = calculaFO();
+		fo_star = fo_ori;
 		//System.out.printf("\nFo na entrada: %.2f\n", fo_star);
-		
+
 		while(melhoria){
 			melhoria = false;
 			for(int i = 0; i < sol.size(); i++){
@@ -544,13 +548,13 @@ public class Main {
 				}
 				else{
 					sol.get(i).setRota(aux);
-					setFluxo(aux, sol.get(i).getDemanda(), 1);	
+					setFluxo(aux, sol.get(i).getDemanda(), 1);
 				}
 			}
 		}
 		return fo_ori;
 	}
-	
+
 	public double perturbacao(ArrayList<Rota> sol, int iter){
 		int sorteio,a1,a2;
 		Random random = new Random();
@@ -560,8 +564,8 @@ public class Main {
 			setFluxo(sol.get(sorteio).getRota(), sol.get(sorteio).getDemanda(), 2);
 			a1 = random.nextInt(n);
 			a2 = random.nextInt(grafo.getVertices().get(a1).getVizinhos().size());
-			a2 = grafo.getVertices().get(a1).getVizinhos().get(a2).getId();		
-			
+			a2 = grafo.getVertices().get(a1).getVizinhos().get(a2).getId();
+
 			d[a1][a2] = 1;
 			dijkstra(sol.get(sorteio).getOrigem());
 			printCaminho(sol.get(sorteio));
@@ -569,9 +573,9 @@ public class Main {
 		atualizaCapacidade();
 		return calculaFO();
 	}
-	
+
 	public void copiaSolucao(ArrayList<Rota> ori,ArrayList<Rota> dest){
-		limpaMatiz(t);	
+		limpaMatiz(t);
 		dest.clear();
 		for(int i=0; i<ori.size(); i++){
 			dest.add(new Rota());
@@ -580,50 +584,53 @@ public class Main {
 			dest.get(i).setDestino(ori.get(i).getDestino());
 			dest.get(i).setRota(ori.get(i).getRota());
 			setFluxo(ori.get(i).getRota(), ori.get(i).getDemanda(), 1);
-		}		
+		}
 	}
-	
+
 	//Metaheuristica ILS
 	public double ils(){
 		ArrayList<Rota> path_linha = new ArrayList<Rota>();
 		double fo, fo_linha;
 		int melhoria = 0;
-		
+
 		construtivo(); //Solucao inicial
-		System.out.printf("\nFO Construtivo: %.4f",calculaFO() );
+		System.out.printf("\nFO no Construtivo: %,.4f",calculaFO() );
+
 		fo = buscaLocal2(path);
-		System.out.printf("\nPrimeira busca local: %.4f",fo );
+		System.out.printf("\nPrimeira busca local: %,.4f",fo );
 		copiaSolucao(path, path_linha);
-		while(melhoria<30){
+
+		while(melhoria<10){
 			melhoria++;
 			fo_linha = perturbacao(path_linha, (int)(path.size()*0.25));
 //			System.out.printf("\nValor da fo_linha pos perturbacao: %.4f", fo_linha);
 			fo_linha = buscaLocal5(path_linha);
+
 //			System.out.printf("\nValor da fo_linha pos busca: %.4f", fo_linha);
 			if(fo_linha < fo){
 				copiaSolucao(path_linha, path);
-				//System.out.println("\n\nMelhorou!");
+				System.out.println("\n\nMelhorou! iter: "+ melhoria);
 				//System.out.printf("Valor da fo anterior: %.4f", fo);
 				fo = fo_linha;
 				//System.out.printf("\nValor da fo depois: %.4f", fo);
-				//melhoria = 0;
+				melhoria = 0;
 			}
 			else{
 				copiaSolucao(path, path_linha);
 			}
-		}				
+		}
 		return fo;
 	}
-	
+
 	//Metaheuristica VNS
 	public double vns(){
 		ArrayList<Rota> s_linha = new ArrayList<Rota>();
 		double fo = 0.0, fo_linha = 0.0;
 		int iter = 0, k=1;
-		
+
 		construtivo(); //Gera solucao inicial
-		fo = calculaFO();
-		System.out.printf("\nFO Construtivo: %.4f",fo);
+		fo = calculaFO2();
+		System.out.printf("\nFOOO Construtivo: %.4f",fo);
 		while(iter < 20){
 			iter++;
 			k=1;
@@ -632,19 +639,52 @@ public class Main {
 				gerarvizinho(s_linha, k);
 				fo_linha = buscaLocal5(s_linha);
 				if(fo_linha < fo){
-					System.out.printf("\nMelhoria: %.4f vizinhança: %d\n", calculaFO(), k);
+					System.out.printf("\nMelhoria: %,.4f vizinhança: %d\n", calculaFO(), k);
 					copiaSolucao(s_linha, path);
 					fo = fo_linha;
 					k = 1;
+//					iter = 0;
 				}
 				else{
 					k++;
 				}
-			}			
+			}
 		}
 		return fo;
 	}
-	
+
+	//Metaheuristica RVNS
+	public double rvns(){
+		ArrayList<Rota> s_linha = new ArrayList<Rota>();
+		double fo = 0.0, fo_linha = 0.0;
+		int iter = 0, k=1;
+
+		construtivo(); //Gera solucao inicial
+		fo = calculaFO2();
+		System.out.printf("\nFO Construtivo: %.4f",fo);
+		while(iter < 20){
+			iter++;
+			k=1;
+			while(k <= 3){ // Numero de vizinhanças disponiveis
+				copiaSolucao(path, s_linha);
+				gerarvizinho(s_linha, k);
+				fo_linha = calculaFO();
+				if(fo_linha < fo){
+					System.out.printf("\nMelhoria: %,.4f vizinhança: %d\n", fo_linha, k);
+					copiaSolucao(s_linha, path);
+					fo = fo_linha;
+					k = 1;
+//					iter = 0;
+				}
+				else{
+					k++;
+				}
+			}
+		}
+		fo = buscaLocal(path);
+		return fo;
+	}
+
 	public void gerarvizinho(ArrayList<Rota> s, int k){
 		if(k == 1)
 			neighbor1(s);
@@ -653,20 +693,20 @@ public class Main {
 		else if(k == 3)
 			neighbor3(s);
 	}
-	
+
 	//gera vizinho removendo aresta mais ocupada de uma das rotas
 	public void neighbor1(ArrayList<Rota> s){
 		ArrayList<Integer> aux = new ArrayList<Integer>();
 		double piorAresta = Integer.MIN_VALUE, razao;
 		Random random = new Random();
 		int maxOri = 0, maxDest = 0, posicao = 0;
-		
+
 		posicao = random.nextInt(s.size());
 		copiaArray(s.get(posicao).getRota(), aux);
 		maxOri = s.get(posicao).getOrigem();
 		maxDest = s.get(posicao).getDestino();
 		piorAresta = Integer.MIN_VALUE;
-		
+
 		setFluxo(aux, s.get(posicao).getDemanda(), 2);
 
 		for(int j = 0; j+1 < aux.size(); j++){
@@ -676,90 +716,90 @@ public class Main {
 				maxOri = aux.get(j);
 				maxDest = aux.get(j+1);
 			}
-		}		
+		}
 		atualizaCapacidade();
 		d[maxOri][maxDest] = 10000000; // bloqueia pior aresta
 		dijkstra(s.get(posicao).getOrigem());
 		printCaminho(s.get(posicao));
 		//System.out.printf("Valor pos vizinho: %.4f\n", calculaFO());
 	}
-	
+
 	//gera vizinho removendo qualquer aresta de uma das rotas
 	public void neighbor2(ArrayList<Rota> s){
 		Random random = new Random();
 		int v = 0, ori = 0, dest = 0, posicao = 0;
-	
-		posicao = random.nextInt(s.size());									
-		setFluxo(s.get(posicao).getRota(), s.get(posicao).getDemanda(), 2);		
+
+		posicao = random.nextInt(s.size());
+		setFluxo(s.get(posicao).getRota(), s.get(posicao).getDemanda(), 2);
 //		System.out.println(s.get(posicao).getRota() +"\ttamanho:" + s.get(posicao).getRota().size());
 		v = random.nextInt(s.get(posicao).getRota().size()-1);
 		ori = s.get(posicao).getRota().get(v);
 		dest = s.get(posicao).getRota().get(v+1);
-	
+
 		atualizaCapacidade();
-		d[ori][dest] = 1000000; 
+		d[ori][dest] = 1000000;
 		dijkstra(s.get(posicao).getOrigem());
-		printCaminho(s.get(posicao));		
+		printCaminho(s.get(posicao));
 //		System.out.printf("Valor pos vizinho: %.4f\n", calculaFO());
 	}
-	
+
 	//gera vizinho removendo qualquer aresta do grafo
 	public void neighbor3(ArrayList<Rota> s){
 		Random random = new Random();
 		int posicao = 0, a1=0, a2=0;
-	
+
 		posicao = random.nextInt(s.size());
 		setFluxo(s.get(posicao).getRota(), s.get(posicao).getDemanda(), 2);
 		a1 = random.nextInt(n);
 		a2 = random.nextInt(grafo.getVertices().get(a1).getVizinhos().size());
-		a2 = grafo.getVertices().get(a1).getVizinhos().get(a2).getId();	
+		a2 = grafo.getVertices().get(a1).getVizinhos().get(a2).getId();
 		atualizaCapacidade();
 		d[a1][a2] = 1000000;
 		dijkstra(s.get(posicao).getOrigem());
-		printCaminho(s.get(posicao));	
+		printCaminho(s.get(posicao));
 //		System.out.printf("Valor pos vizinho: %.4f\n", calculaFO());
 	}
-	
-	// Atualiza os valores de capacidade disponivel em cada aresta da matriz d	
-	public void atualizaCapacidade(){		
+
+	// Atualiza os valores de capacidade disponivel em cada aresta da matriz d
+	public void atualizaCapacidade(){
 		for (int i = 0; i < n; i++){
 			for (int j = 0; j < n; j++){
-				if(capacidade[i][j][0] == 0) // Pular arestas inexistentes				
+				if(capacidade[i][j][0] == 0) // Pular arestas inexistentes
 					continue;
 				d[i][j] = 2.5*uMax - (capacidade[i][j][0]-t[i][j]);
 			}
 		}
 	}
-	
-	/* - Imprime o caminho da origem ate o destino / Preenche a tabela de fluxos 't'/ 
+
+	/* - Imprime o caminho da origem ate o destino / Preenche a tabela de fluxos 't'/
 	   - Salva o trajeto percorrido em caminho */
-	public void printCaminho(Rota caminho){		
+	public void printCaminho(Rota caminho){
 		ArrayList<Integer> aux = new ArrayList<Integer>();
 		Integer antecessor = caminho.getDestino();
-		aux.add(antecessor);		
- 		
+		aux.add(antecessor);
+
 		for(;;){
 			if(pred[antecessor] == -1) break;
 			antecessor = pred[antecessor];
 			aux.add(antecessor);
-		}		
+		}
 		for(int i = aux.size()-1; i >= 0; i--){
 			if(i == 0) break;
-			t[aux.get(i)][aux.get(i-1)] += caminho.getDemanda();			
+			t[aux.get(i)][aux.get(i-1)] += caminho.getDemanda();
 		}
 		Collections.reverse(aux);
-		caminho.setRota(aux);		
+		caminho.setRota(aux);
 	}
-	
+
 	// Verfica se existem vertices abertos na lista a
-	public boolean aberto(){		
+	public boolean aberto(){
 		for(int i = 0; i < a.length; i++)
 			if(a[i] == true) return true;
 		return false;
 	}
 
 	// Retorna o id do vertice mais proximo da origem
-	public int maisProximo() {		
+	public int maisProximo() {
 		double near = Integer.MAX_VALUE;
 		int id = 0;
 		for (int i = 0; i < a.length; i++) {
@@ -771,9 +811,9 @@ public class Main {
 			}
 		}
 		return id;
-	}	
-	
-	// Atualiza as distancias dos vizinhos de r	
+	}
+
+	// Atualiza as distancias dos vizinhos de r
 	public double relaxaAresta(int atual, int vizinho) {
 		if(d[atual][vizinho] != 0 && a[vizinho] == true) {
 			if(dist[vizinho] < dist[atual] + d[atual][vizinho])
@@ -802,18 +842,18 @@ public class Main {
 			r = maisProximo();    // Vertice aberto mais proximo da origem
 			//f.add(grafo.get(r));  // Adiciona vertice no conjunto fexados
 			a[r] = false;         // Remove vertice do conjunto dos abertos
-			
+
 			for(int j = 0; j < grafo.getVertices().get(r).getVizinhos().size(); j++){
 				menorDist = relaxaAresta(r, grafo.getVertices().get(r).getVizinhos().get(j).getId());
 				if(menorDist < dist[grafo.getVertices().get(r).getVizinhos().get(j).getId()]){
 					dist[grafo.getVertices().get(r).getVizinhos().get(j).getId()] = menorDist;
 					pred[grafo.getVertices().get(r).getVizinhos().get(j).getId()] = r;
 				}
-			}				
-		}	
+			}
+		}
 	}
 
 	public static void main(String[] args){
-		Main rede = new Main(args[0]);      
+		Main rede = new Main(args[0]);
 	}
 }
